@@ -161,21 +161,16 @@ while :; do
   # shellcheck disable=SC2162
   IFS= read key
   case $key in
-    c | C) random_colors; frame; reset_var ;;
-    d | D) [[ $SHOWDATE ]] || { SHOWDATE=1; ((TIMER=EPOCHSECONDS)); reset_var; } ;;
+    c | C) random_color; reset_var ;;
     q | Q) break ;;
-    r | R) clear; frame; reset_var ;;
+    r | R) clear; reset_var ;;
   esac
 
   _sync
+
   clock
   
   pause 0.5
-
-  [[ $TIMER ]] && ((EPOCHSECONDS-TIMER == 5 )) && {
-    unset TIMER SHOWDATE
-    reset_var
-  }
 
 done
 
