@@ -25,20 +25,18 @@
 #
 # BinClock
 # C : 2022/04/01
-# M : 2022/04/01
+# M : 2022/04/02
 # D : A binary clock.
 
 bold="\e[1m"
 dim="\e[2m"
-color1="\e[38;5;9m"
-color2="\e[38;5;1m"
 rst="\e[m"
 
-hidecursor()    { echo -ne "\e[?25l"; }
-showcursor()    { echo -ne "\e[?25h"; }
-locate()        { local y x; y=$1; x=$2; printf '\e[%d;%dH' $((y)) $((x)); }
-get_scr_size()  { shopt -s checkwinsize; (:;:); }
-random_colors() { local C; ((C=(RANDOM%254)+1)); color1="\e[38;5;${C}m"; color2="\e[38;5;$((C+1))m" ;}
+hidecursor()   { echo -ne "\e[?25l"; }
+showcursor()   { echo -ne "\e[?25h"; }
+locate()       { local y x; y=$1; x=$2; printf '\e[%d;%dH' $((y)) $((x)); }
+get_scr_size() { shopt -s checkwinsize; (:;:); }
+random_color() { local C; ((C=(RANDOM%254))); color="\e[38;5;${C}m" ;}
 
 exec {pause_fd}<> <(:)
 pause() ( read -rt "$1" -u $pause_fd )
@@ -58,10 +56,9 @@ init_screen() {
   get_scr_size
   ((OY=(LINES/2)-2))
   ((OX=(COLUMNS/2)-8))
-  frame
 }
 
-reset_var() { unset hy mm sd; }
+reset_var() { unset h m s; }
 
 tobin() {
   # convert an integer from decimal to binary.
@@ -90,7 +87,7 @@ digit() {
   # a guide that helps to read its value.
 
   # i.e.: 59
-  # 32 16  8  .  2  1
+  # 32 16  8     2  1
   #  1  1  1  0  1  1
 
 
@@ -103,51 +100,38 @@ digit() {
   for ((i=0;i<${#n};i++)); do
     locate $((y)) $((x))
     (( ${n:i:1} == 1 )) && {
-      printf "%b%3s%b" "${color1}${bold}" "$g" "${rst}"
+      printf "%b%3s%b" "${color}" "$g" "${rst}"
       locate $((y+1)) $((x))
-      printf "%b%3s%b" "${color2}${bold}" "1" "${rst}"
+      printf "%b%3s%b" "${color}${bold}" "1" "${rst}"
     }
     (( ${n:i:1} == 0 )) && {
-      printf "%b%3s%b" "${color1}${dim}"  "." "${rst}"
+      printf "%3s" " "
       locate $((y+1)) $((x))
-      printf "%b%3s%b" "${color2}${dim}"  "0" "${rst}"
+      printf "%b%3s%b" "${color}${dim}"  "0" "${rst}"
     }
     ((x+=3))
     ((g=g == 1 ? 32 : g/2))
   done
 }
 
-frame() {
-  local y x color
-  color=$color1
-
-  for ((y=OY-1;y<=OY-1+7;y++)); do
-    printf "%b" "$color"
-    for ((x=OX-3; x<=OX-3+21; x+=3)); do
-      ((y>OY-1 && y<OY-1+7 && x>OX-3 && x<OX-3+21)) && continue
-      locate $((y)) $((x))
-      printf "%3s" "."
-    done
-    [[ $color == "$color1" ]] && color=$color2 || color=$color1
-  done
-}
-
 clock() {
-  local TD HY MM SD
-  [[ $SHOWDATE ]] || TD="$(date "+%_H %_M %_S")"
-  [[ $SHOWDATE ]] && TD="$(date "+%_y %_m %_d")"
+  local TD H M S
+  TD="$(date "+%_H %_M %_S")"
+
   # shellcheck disable=SC2162
-  IFS=' ' read HY MM SD <<< "$TD"
+  IFS=' ' read H M S <<< "$TD"
+
   ((y=OY))
   ((x=OX))
-  [[ $hy != "$HY" ]] && { hy=$HY; digit $((y)) $((x)) "$(tobin "$HY" 6)"; }
+
+  [[ $h != "$H" ]] && { h=$H; digit $((y)) $((x)) "$(tobin "$h" 6)"; }
   ((y+=2))
-  [[ $mm != "$MM" ]] && { mm=$MM; digit $((y)) $((x)) "$(tobin "$MM" 6)"; }
+  [[ $m != "$M" ]] && { m=$M; digit $((y)) $((x)) "$(tobin "$m" 6)"; }
   ((y+=2))
-  [[ $sd != "$SD" ]] && { sd=$SD; digit $((y)) $((x)) "$(tobin "$SD" 6)"; }
+  [[ $s != "$S" ]] && { s=$S; digit $((y)) $((x)) "$(tobin "$s" 6)"; }
 }
 
-declare hy mm sd
+declare h m s
 
 trap 'echo -en "\e[m"; showcursor; stty sane; echo; exit' INT QUIT
 trap 'init_screen; reset_var' WINCH
