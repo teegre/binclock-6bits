@@ -25,7 +25,7 @@
 #
 # BinClock
 # C : 2022/04/01
-# M : 2022/04/02
+# M : 2022/06/15
 # D : A binary clock.
 
 bold="\e[1m"
@@ -45,7 +45,7 @@ _sync() {
   local n=1
   local N
   while (( n !=0 )); do
-    N="${EPOCHREALTIME#*,}"
+    LC_TIME=C N="${EPOCHREALTIME#*.}"
     n=${N:0:1}
     pause 0.0625
   done
