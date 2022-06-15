@@ -100,7 +100,7 @@ digit() {
   for ((i=0;i<${#n};i++)); do
     locate $((y)) $((x))
     (( ${n:i:1} == 1 )) && {
-      printf "%b%3s%b" "${color}" "$g" "${rst}"
+      printf "%b%3s%b" "${color}${dim}" "$g" "${rst}"
       locate $((y+1)) $((x))
       printf "%b%3s%b" "${color}${bold}" "1" "${rst}"
     }
